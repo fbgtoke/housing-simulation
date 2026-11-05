@@ -1,0 +1,18 @@
+{
+    "modelo": "compra",
+    "tipo_operacion": "segunda_mano",
+    "valor_propiedad": 350000,
+    "entrada": 87500,
+    "tasacion": 450,
+    "comision_apertura_pct": 0.5,
+    "notaria": 850,
+    "registro": 600,
+    "gestoria": 350,
+    "seguro_hogar": 250,
+    "seguro_vida": 0,
+    "ibi": 900,
+    "comunidad": 1200,
+    "tipo_fijo": 3.0,
+    "n_mensualidades": 300,
+    "horizonte_meses": 420
+}

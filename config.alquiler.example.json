@@ -1,0 +1,10 @@
+{
+    "modelo": "alquiler",
+    "cuota_inicial": 1200,
+    "incremento_pct": 2.5,
+    "intervalo_incremento_meses": 12,
+    "fianza_mensualidades": 2,
+    "agencia": 0,
+    "seguro_hogar": 120,
+    "horizonte_meses": 420
+}
