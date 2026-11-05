@@ -2,13 +2,13 @@
 
 // Interfaz interactiva: una sección de parámetros por modelo y dos gráficos
 // comparativos (gasto mensual y gasto acumulado) que se recalculan con
-// debounce en cada cambio. La lógica de simulación vive en el backend
-// (paquete modelos/); aquí solo se recogen parámetros y se pintan series.
+// debounce en cada cambio. La lógica de simulación vive en modelos.js
+// (traducción de modelos/), así que todo funciona sin backend.
 
 const PALETA = ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
 const DEBOUNCE_MS = 300;
 
-let especificacion = null;  // respuesta de /api/modelos
+let especificacion = null;  // ESPECIFICACION_UI de modelos.js
 const colorModelo = {};     // nombre de modelo -> color de su línea
 let graficoMensual = null;
 let graficoAcumulado = null;
@@ -114,19 +114,33 @@ async function recalcular() {
     const horizonteMeses = Math.round(valor * (unidades === "anios" ? 12 : 1));
     if (!Number.isFinite(horizonteMeses) || horizonteMeses < 1) return;
 
-    const modelos = {};
+    const resultado = {};
     document.querySelectorAll("section.modelo").forEach((seccion) => {
-        if (seccion.querySelector(".activo").checked) {
-            modelos[seccion.dataset.modelo] = recogerValores(seccion);
+        if (!seccion.querySelector(".activo").checked) return;
+        const nombre = seccion.dataset.modelo;
+        const valores = recogerValores(seccion);
+        try {
+            const modelo = MODELOS[nombre];
+            const { cfg, horizonte } = modelo.cargar({
+                ...valores, modelo: nombre, horizonte_meses: horizonteMeses,
+            });
+            const filas = modelo.simular(cfg, horizonte);
+            resultado[nombre] = {
+                resumen: modelo.resumen(cfg, filas),
+                serie: {
+                    gasto_mes: filas.map((f) => f.gasto_mes),
+                    gasto_acumulado: filas.map((f) => f.gasto_acumulado),
+                    comentarios: filas
+                        .filter((f) => f.comentario)
+                        .map((f) => ({ mes: f.mes, texto: f.comentario })),
+                },
+            };
+        } catch (e) {
+            resultado[nombre] = {
+                error: e instanceof ConfigError ? e.message : `error inesperado: ${e}`,
+            };
         }
     });
-
-    const respuesta = await fetch("/api/simular", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ horizonte_meses: horizonteMeses, modelos }),
-    });
-    const resultado = await respuesta.json();
     actualizarSecciones(resultado);
     actualizarGraficos(resultado);
 }
@@ -253,8 +267,7 @@ function actualizarGraficos(resultado) {
 // ---------------------------------------------------------------------------
 
 async function iniciar() {
-    const respuesta = await fetch("/api/modelos");
-    especificacion = await respuesta.json();
+    especificacion = ESPECIFICACION_UI;
     Object.keys(especificacion).forEach((nombre, i) => {
         colorModelo[nombre] = PALETA[i % PALETA.length];
     });

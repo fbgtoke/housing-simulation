@@ -99,23 +99,28 @@ consistentes.
 
 ## Interfaz gráfica
 
-```bash
-python app.py [--puerto 8000] [--no-abrir-navegador]
-```
+Aplicación **estática, sin backend**: abre `web/index.html` directamente en
+cualquier navegador (doble clic) o sirvela desde cualquier hosting
+estático (GitHub Pages, etc.). No necesita Python ni conexión a internet:
+toda la simulación se ejecuta en el navegador y Chart.js está vendoreado.
 
-Arranca un servidor local (solo accesible desde 127.0.0.1) y abre el
-navegador. La interfaz muestra una sección por modelo con sus parámetros
-(precargados con los valores de los `config.*example.json`), un checkbox
-para activar/desactivar cada modelo, un horizonte temporal global y dos
-gráficos comparativos con una línea por modelo activo: gasto mensual y
-gasto acumulado (eje X: meses; eje Y: euros). Los hitos (`firma`, `última
+Para compartirla basta enviar la carpeta `web/`.
+
+La interfaz muestra una sección por modelo con sus parámetros (precargados
+con los valores de los `config.*example.json`), un checkbox para
+activar/desactivar cada modelo, un horizonte temporal global y dos gráficos
+comparativos con una línea por modelo activo: gasto mensual y gasto
+acumulado (eje X: meses; eje Y: euros). Los hitos (`firma`, `última
 cuota hipoteca`, `revisión de cuota`) se marcan sobre las líneas. El
 gráfico mensual permite ocultar el pico del mes 0 (gastos de firma) con un
 checkbox. Todo se recalcula en tiempo real al cambiar cualquier parámetro.
 
-Para compartir la herramienta: enviar la carpeta completa; el destinatario
-solo necesita Python 3 (sin dependencias) y ejecutar `python app.py`.
-El frontend (web/) usa Chart.js vendoreado, así que funciona sin conexión.
+La lógica de simulación del navegador vive en `web/modelos.js`, una
+traducción a JavaScript del paquete `modelos/` (Python). El CLI
+`simulate.py` sigue usando la versión Python, que es la implementación de
+referencia: **cualquier cambio debe aplicarse en ambas y mantenerse en
+paridad** (existe una prueba de paridad que compara las series fila a fila,
+ver abajo).
 
 ## Añadir nuevos modelos
 
@@ -125,6 +130,12 @@ nuevo, crea un módulo que exponga `NOMBRE`, `COLUMNAS`, `cargar(data)`,
 `MODULOS_MODELO` de `modelos/__init__.py`. La interfaz de cada modelo está
 documentada en ese fichero.
 
-Para que el modelo aparezca también en la interfaz gráfica: añade su
-entrada en `CAMPOS_UI` (app.py) describiendo los campos del formulario y
-crea su `config.<modelo>.example.json`, que aporta los valores por defecto.
+Para que el modelo aparezca también en la interfaz gráfica:
+1. Tradúcelo a JavaScript en `web/modelos.js` (misma interfaz) y añádelo
+   al registro `MODELOS`.
+2. Añade su entrada en `ESPECIFICACION_UI` describiendo los campos del
+   formulario y sus valores por defecto.
+3. Crea su `config.<modelo>.example.json` (valores por defecto del CLI).
+
+Comprueba la paridad Python/JS ejecutando las simulaciones de ambos con
+los mismos parámetros y comparando las series fila a fila.
