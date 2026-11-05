@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulación de gastos de vivienda</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="vendor/chart.umd.js"></script>
+</head>
+<body>
+<header>
+    <h1>Simulación de gastos de vivienda</h1>
+    <div id="controles-globales">
+        <label class="control">
+            <span>Horizonte</span>
+            <input type="number" id="horizonte" min="1" step="1" value="420">
+            <select id="horizonte-unidades">
+                <option value="meses">meses</option>
+                <option value="anios">años</option>
+            </select>
+        </label>
+        <label class="control">
+            <input type="checkbox" id="incluir-firma" checked>
+            <span>Incluir gastos de firma (mes 0) en el gráfico mensual</span>
+        </label>
+    </div>
+</header>
+<main>
+    <div id="modelos"></div>
+    <section id="graficos">
+        <div class="grafico"><canvas id="grafico-mensual"></canvas></div>
+        <div class="grafico"><canvas id="grafico-acumulado"></canvas></div>
+    </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

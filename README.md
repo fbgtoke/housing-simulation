@@ -97,6 +97,26 @@ modelos. Puede superar la duración de la hipoteca (a partir de su
 liquidación solo quedan los recurrentes). Si se dan ambos, deben ser
 consistentes.
 
+## Interfaz gráfica
+
+```bash
+python app.py [--puerto 8000] [--no-abrir-navegador]
+```
+
+Arranca un servidor local (solo accesible desde 127.0.0.1) y abre el
+navegador. La interfaz muestra una sección por modelo con sus parámetros
+(precargados con los valores de los `config.*example.json`), un checkbox
+para activar/desactivar cada modelo, un horizonte temporal global y dos
+gráficos comparativos con una línea por modelo activo: gasto mensual y
+gasto acumulado (eje X: meses; eje Y: euros). Los hitos (`firma`, `última
+cuota hipoteca`, `revisión de cuota`) se marcan sobre las líneas. El
+gráfico mensual permite ocultar el pico del mes 0 (gastos de firma) con un
+checkbox. Todo se recalcula en tiempo real al cambiar cualquier parámetro.
+
+Para compartir la herramienta: enviar la carpeta completa; el destinatario
+solo necesita Python 3 (sin dependencias) y ejecutar `python app.py`.
+El frontend (web/) usa Chart.js vendoreado, así que funciona sin conexión.
+
 ## Añadir nuevos modelos
 
 Los modelos viven en `modelos/`, cada uno en su módulo. Para añadir uno
@@ -104,3 +124,7 @@ nuevo, crea un módulo que exponga `NOMBRE`, `COLUMNAS`, `cargar(data)`,
 `simular(cfg, horizonte)` y `resumen(cfg, filas)`, y regístralo en la lista
 `MODULOS_MODELO` de `modelos/__init__.py`. La interfaz de cada modelo está
 documentada en ese fichero.
+
+Para que el modelo aparezca también en la interfaz gráfica: añade su
+entrada en `CAMPOS_UI` (app.py) describiendo los campos del formulario y
+crea su `config.<modelo>.example.json`, que aporta los valores por defecto.

@@ -16,7 +16,7 @@ CAMPOS_OBLIGATORIOS = {
     "comision_apertura_pct", "notaria", "registro", "gestoria",
     "seguro_hogar", "ibi", "comunidad", "tipo_fijo", "n_mensualidades",
 }
-CAMPOS_OPCIONALES = {"seguro_vida", "horizonte_meses", "horizonte_anios"}
+CAMPOS_OPCIONALES = {"itp_reducido", "seguro_vida", "horizonte_meses", "horizonte_anios"}
 
 # ---------------------------------------------------------------------------
 # Constantes fiscales (Cataluña). No son parámetros libres del modelo: se
