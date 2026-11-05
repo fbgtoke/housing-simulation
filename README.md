@@ -58,6 +58,38 @@ aplica a partir del mes `intervalo + 1`. El mes 0 concentra fianza + agencia
 (convención idéntica al modelo de compra). No se modelan IBI ni comunidad
 (los paga el propietario), ni mudanzas ni suministros.
 
+## Modelo "cooperativa"
+
+Simula la adquisición a través de una cooperativa de vivienda, de forma
+simplificada. Con `C` = coste total del proyecto, `π` = participación de tu
+unidad, `p` = pago inicial y `s` = subvención:
+
+```
+pago inicial (tuyo) = π × p × C
+hipoteca (tuya)     = π × C × (1 − p) × (1 − s)
+```
+
+La subvención se descuenta a nivel de proyecto antes de repartir la
+hipoteca, por lo que el beneficio que recibes escala con tu participación.
+La hipoteca (sistema francés, tipo fijo) se paga en los meses 1..n; el mes
+0 concentra el pago inicial; a partir del mes n solo queda la cuota
+cooperativa.
+
+| Campo | Significado |
+|---|---|
+| `coste_total_proyecto` | € del proyecto completo |
+| `porcentaje_participacion_pct` | % del coste que asume tu unidad |
+| `pago_inicial_pct` | % del coste total pagado por adelantado, a nivel de proyecto. Lo habitual en cooperativas es 5–15%; fuera de ese rango el modelo avisa (no es error) |
+| `subvencion_pct` | % del coste restante (tras el pago inicial) subvencionado por entidades públicas |
+| `tipo_fijo` | Tipo de interés fijo anual (%) |
+| `n_mensualidades` | Duración de la hipoteca (meses) |
+| `cuota_cooperativa` | Cuota por pertenecer a la cooperativa, en **€/mes** (a diferencia de `comunidad` en compra, que es €/año prorrateado) |
+
+Supuestos y omisiones: los pagos escalonados durante la construcción
+ocurren todos en el mes 0; se ignoran el seguro de hogar, los gastos de
+subrogación/tasación/notaría/registro y los impuestos (IVA, AJD o ITP según
+la tipología del proyecto).
+
 ## Campo común
 
 `horizonte_meses` o `horizonte_anios`: horizonte de la simulación, en ambos

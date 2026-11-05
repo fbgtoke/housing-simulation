@@ -1,0 +1,11 @@
+{
+    "modelo": "cooperativa",
+    "coste_total_proyecto": 1000000,
+    "porcentaje_participacion_pct": 25,
+    "pago_inicial_pct": 10,
+    "subvencion_pct": 20,
+    "tipo_fijo": 3.5,
+    "n_mensualidades": 300,
+    "cuota_cooperativa": 150,
+    "horizonte_meses": 420
+}

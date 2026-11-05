@@ -11,8 +11,8 @@ Para añadir un nuevo modelo: crea un módulo en este paquete que exponga
 e impórtalo en la lista MODELO_MODULES de abajo.
 """
 
-from . import alquiler, compra
+from . import alquiler, compra, cooperativa
 
-MODULOS_MODELO = (compra, alquiler)
+MODULOS_MODELO = (compra, alquiler, cooperativa)
 
 MODELOS = {mod.NOMBRE: mod for mod in MODULOS_MODELO}
