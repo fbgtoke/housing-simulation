@@ -1,18 +1,19 @@
 "use strict";
 
-// Interfaz interactiva: una sección de parámetros por modelo y dos gráficos
-// comparativos (gasto mensual y gasto acumulado) que se recalculan con
-// debounce en cada cambio. La lógica de simulación vive en modelos.js
-// (traducción de modelos/), así que todo funciona sin backend.
+// Interfaz interactiva: por cada modelo puede haber varias instancias, cada
+// una con su recuadro de parámetros (nombre, activo, quitar) y una línea en
+// los gráficos etiquetada con su nombre. La lógica de simulación vive en
+// modelos.js (traducción de modelos/), así que todo funciona sin backend.
 
 const PALETA = ["#2563eb", "#16a34a", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
 const DEBOUNCE_MS = 300;
 
-let especificacion = null;  // ESPECIFICACION_UI de modelos.js
-const colorModelo = {};     // nombre de modelo -> color de su línea
 let graficoMensual = null;
 let graficoAcumulado = null;
 let temporizador = null;
+let contadorInstancias = 0;  // ids únicos de instancia
+let indiceColor = 0;
+const coloresInstancia = new Map();  // id de instancia -> color de su línea
 
 function formatoEUR(valor) {
     return valor.toLocaleString("es-ES", { maximumFractionDigits: 0 }) + " €";
@@ -55,43 +56,9 @@ function crearCampo(campo, defectos) {
     return envoltorio;
 }
 
-function renderizarSecciones() {
-    const contenedor = document.getElementById("modelos");
-    for (const [nombre, spec] of Object.entries(especificacion)) {
-        const seccion = document.createElement("section");
-        seccion.className = "modelo";
-        seccion.dataset.modelo = nombre;
-
-        const cabecera = document.createElement("div");
-        cabecera.className = "cabecera";
-        const activo = document.createElement("input");
-        activo.type = "checkbox";
-        activo.className = "activo";
-        activo.checked = true;
-        const titulo = document.createElement("strong");
-        titulo.textContent = nombre;
-        cabecera.append(activo, titulo);
-
-        const error = document.createElement("div");
-        error.className = "error";
-
-        const campos = document.createElement("div");
-        campos.className = "campos";
-        for (const campo of spec.campos) {
-            campos.appendChild(crearCampo(campo, spec.defectos));
-        }
-
-        const resumen = document.createElement("pre");
-        resumen.className = "resumen";
-
-        seccion.append(cabecera, error, campos, resumen);
-        contenedor.appendChild(seccion);
-    }
-}
-
-function recogerValores(seccion) {
+function recogerValores(contenedor) {
     const valores = {};
-    seccion.querySelectorAll("[data-clave]").forEach((entrada) => {
+    contenedor.querySelectorAll("[data-clave]").forEach((entrada) => {
         const clave = entrada.dataset.clave;
         if (entrada.type === "checkbox") {
             valores[clave] = entrada.checked;
@@ -104,29 +71,115 @@ function recogerValores(seccion) {
     return valores;
 }
 
+function crearInstancia(modelo) {
+    const spec = ESPECIFICACION_UI[modelo];
+    const grupo = document.querySelector(
+        `.grupo-modelo[data-modelo="${modelo}"] .instancias`);
+
+    const existentes = grupo.querySelectorAll(".instancia").length;
+    const nombreDefecto = existentes === 0 ? modelo : `${modelo} ${existentes + 1}`;
+
+    const id = `inst-${++contadorInstancias}`;
+    const color = PALETA[indiceColor++ % PALETA.length];
+    coloresInstancia.set(id, color);
+
+    const card = document.createElement("article");
+    card.className = "instancia";
+    card.dataset.modelo = modelo;
+    card.dataset.id = id;
+    card.style.borderLeftColor = color;
+
+    const cabecera = document.createElement("div");
+    cabecera.className = "cabecera";
+    const activo = document.createElement("input");
+    activo.type = "checkbox";
+    activo.className = "activo";
+    activo.checked = true;
+    const nombre = document.createElement("input");
+    nombre.type = "text";
+    nombre.className = "nombre";
+    nombre.value = nombreDefecto;
+    nombre.placeholder = modelo;
+    const quitar = document.createElement("button");
+    quitar.className = "quitar";
+    quitar.textContent = "✕";
+    quitar.title = "Quitar instancia";
+    quitar.addEventListener("click", () => {
+        card.remove();
+        recalcular();
+    });
+    cabecera.append(activo, nombre, quitar);
+
+    const error = document.createElement("div");
+    error.className = "error";
+
+    const campos = document.createElement("div");
+    campos.className = "campos";
+    for (const campo of spec.campos) {
+        campos.appendChild(crearCampo(campo, spec.defectos));
+    }
+
+    const resumen = document.createElement("pre");
+    resumen.className = "resumen";
+
+    card.append(cabecera, error, campos, resumen);
+    grupo.appendChild(card);
+}
+
+function renderizarGrupos() {
+    const contenedor = document.getElementById("modelos");
+    for (const modelo of Object.keys(ESPECIFICACION_UI)) {
+        const grupo = document.createElement("section");
+        grupo.className = "grupo-modelo";
+        grupo.dataset.modelo = modelo;
+
+        const cabecera = document.createElement("div");
+        cabecera.className = "cabecera-grupo";
+        const titulo = document.createElement("h2");
+        titulo.textContent = modelo;
+        const anadir = document.createElement("button");
+        anadir.textContent = "+ Añadir instancia";
+        anadir.addEventListener("click", () => {
+            crearInstancia(modelo);
+            recalcular();
+        });
+        cabecera.append(titulo, anadir);
+
+        const instancias = document.createElement("div");
+        instancias.className = "instancias";
+
+        grupo.append(cabecera, instancias);
+        contenedor.appendChild(grupo);
+        crearInstancia(modelo);  // una instancia inicial por modelo
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Recálculo
 // ---------------------------------------------------------------------------
 
-async function recalcular() {
+function recalcular() {
     const valor = parseFloat(document.getElementById("horizonte").value);
     const unidades = document.getElementById("horizonte-unidades").value;
     const horizonteMeses = Math.round(valor * (unidades === "anios" ? 12 : 1));
     if (!Number.isFinite(horizonteMeses) || horizonteMeses < 1) return;
 
     const resultado = {};
-    document.querySelectorAll("section.modelo").forEach((seccion) => {
-        if (!seccion.querySelector(".activo").checked) return;
-        const nombre = seccion.dataset.modelo;
-        const valores = recogerValores(seccion);
+    document.querySelectorAll(".instancia").forEach((card) => {
+        if (!card.querySelector(".activo").checked) return;
+        const modelo = card.dataset.modelo;
+        const nombre = card.querySelector(".nombre").value.trim() || modelo;
+        const id = card.dataset.id;
         try {
-            const modelo = MODELOS[nombre];
-            const { cfg, horizonte } = modelo.cargar({
-                ...valores, modelo: nombre, horizonte_meses: horizonteMeses,
+            const { cfg, horizonte } = MODELOS[modelo].cargar({
+                ...recogerValores(card),
+                modelo,
+                horizonte_meses: horizonteMeses,
             });
-            const filas = modelo.simular(cfg, horizonte);
-            resultado[nombre] = {
-                resumen: modelo.resumen(cfg, filas),
+            const filas = MODELOS[modelo].simular(cfg, horizonte);
+            resultado[id] = {
+                nombre,
+                resumen: MODELOS[modelo].resumen(cfg, filas),
                 serie: {
                     gasto_mes: filas.map((f) => f.gasto_mes),
                     gasto_acumulado: filas.map((f) => f.gasto_acumulado),
@@ -136,12 +189,13 @@ async function recalcular() {
                 },
             };
         } catch (e) {
-            resultado[nombre] = {
+            resultado[id] = {
+                nombre,
                 error: e instanceof ConfigError ? e.message : `error inesperado: ${e}`,
             };
         }
     });
-    actualizarSecciones(resultado);
+    actualizarInstancias(resultado);
     actualizarGraficos(resultado);
 }
 
@@ -150,12 +204,12 @@ function programarRecalculo() {
     temporizador = setTimeout(recalcular, DEBOUNCE_MS);
 }
 
-function actualizarSecciones(resultado) {
-    document.querySelectorAll("section.modelo").forEach((seccion) => {
-        const res = resultado[seccion.dataset.modelo];
-        const error = seccion.querySelector(".error");
-        const resumen = seccion.querySelector(".resumen");
-        if (!res) {  // modelo inactivo
+function actualizarInstancias(resultado) {
+    document.querySelectorAll(".instancia").forEach((card) => {
+        const res = resultado[card.dataset.id];
+        const error = card.querySelector(".error");
+        const resumen = card.querySelector(".resumen");
+        if (!res) {  // instancia inactiva
             error.textContent = "";
             resumen.textContent = "";
             return;
@@ -200,7 +254,7 @@ function configuracionGrafico(titulo, etiquetaY) {
                     callbacks: {
                         label: (ctx) => {
                             if (ctx.dataset.marcador) {
-                                return ` ${ctx.raw.texto} (mes ${ctx.parsed.x})`;
+                                return ` ${ctx.dataset.label}: ${ctx.raw.texto} (mes ${ctx.parsed.x})`;
                             }
                             return ` ${ctx.dataset.label}: ${formatoEUR(ctx.parsed.y)}`;
                         },
@@ -213,12 +267,12 @@ function configuracionGrafico(titulo, etiquetaY) {
 
 function construirDatasets(resultado, claveSerie, incluirMes0) {
     const datasets = [];
-    for (const [nombre, res] of Object.entries(resultado)) {
+    for (const [id, res] of Object.entries(resultado)) {
         if (!res.serie) continue;
-        const color = colorModelo[nombre];
+        const color = coloresInstancia.get(id);
 
         datasets.push({
-            label: nombre,
+            label: res.nombre,
             data: res.serie[claveSerie].map((v, mes) => ({
                 x: mes,
                 y: mes === 0 && !incluirMes0 ? null : v,
@@ -241,7 +295,7 @@ function construirDatasets(resultado, claveSerie, incluirMes0) {
             datasets.push({
                 marcador: true,
                 type: "scatter",
-                label: nombre,
+                label: res.nombre,
                 data: marcadores,
                 backgroundColor: color,
                 pointRadius: 5,
@@ -266,12 +320,8 @@ function actualizarGraficos(resultado) {
 // Arranque
 // ---------------------------------------------------------------------------
 
-async function iniciar() {
-    especificacion = ESPECIFICACION_UI;
-    Object.keys(especificacion).forEach((nombre, i) => {
-        colorModelo[nombre] = PALETA[i % PALETA.length];
-    });
-    renderizarSecciones();
+function iniciar() {
+    renderizarGrupos();
 
     graficoMensual = new Chart(
         document.getElementById("grafico-mensual"),

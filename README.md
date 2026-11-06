@@ -106,14 +106,24 @@ toda la simulación se ejecuta en el navegador y Chart.js está vendoreado.
 
 Para compartirla basta enviar la carpeta `web/`.
 
-La interfaz muestra una sección por modelo con sus parámetros (precargados
-con los valores de los `config.*example.json`), un checkbox para
-activar/desactivar cada modelo, un horizonte temporal global y dos gráficos
-comparativos con una línea por modelo activo: gasto mensual y gasto
+La interfaz muestra un grupo por modelo con un botón «+ Añadir
+instancia». Cada instancia es un recuadro con: un campo **nombre** (que es
+la etiqueta de su línea en los gráficos y en la leyenda), un checkbox de
+activo, un botón para quitarla (✕), sus parámetros (precargados con los
+valores de los `config.*example.json`) y su resumen. Añadir o quitar una
+instancia añade o elimina su línea de los gráficos. La primera instancia
+de cada modelo se llama como el modelo y las siguientes reciben sufijo
+numérico (`compra 2`); el color se asigna por instancia y se refleja en el
+borde izquierdo del recuadro.
+
+Junto a las instancias hay un horizonte temporal global y dos gráficos
+comparativos con una línea por instancia activa: gasto mensual y gasto
 acumulado (eje X: meses; eje Y: euros). Los hitos (`firma`, `última
 cuota hipoteca`, `revisión de cuota`) se marcan sobre las líneas. El
 gráfico mensual permite ocultar el pico del mes 0 (gastos de firma) con un
-checkbox. Todo se recalcula en tiempo real al cambiar cualquier parámetro.
+checkbox. Todo se recalcula en tiempo real al cambiar cualquier parámetro
+(los errores de validación se muestran en el recuadro de la instancia
+afectada, sin romper el resto).
 
 La lógica de simulación del navegador vive en `web/modelos.js`, una
 traducción a JavaScript del paquete `modelos/` (Python). El CLI

@@ -54,33 +54,96 @@ main {
     margin: 0 auto;
 }
 
-/* --- Secciones de modelos --- */
+/* --- Grupos de modelos e instancias --- */
 
 #modelos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
     gap: 1.5rem;
+    align-items: start;
 }
 
-section.modelo {
+.grupo-modelo {
     background: #fff;
     border: 1px solid var(--borde);
     border-radius: 8px;
     padding: 1rem;
 }
 
-section.modelo .cabecera {
+.cabecera-grupo {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
 }
 
-section.modelo .cabecera strong {
+.cabecera-grupo h2 {
     font-size: 1rem;
+    margin: 0;
 }
 
-section.modelo .error {
+.cabecera-grupo button {
+    font: inherit;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    color: var(--texto);
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cabecera-grupo button:hover {
+    background: var(--fondo);
+}
+
+.instancias {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.instancia {
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-left: 4px solid transparent;
+    border-radius: 6px;
+    padding: 0.75rem;
+}
+
+.instancia .cabecera {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.instancia .nombre {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--texto);
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+}
+
+.instancia .quitar {
+    flex: none;
+    border: none;
+    background: none;
+    padding: 0.1rem 0.3rem;
+    font-size: 1rem;
+    color: var(--texto-suave);
+    cursor: pointer;
+}
+
+.instancia .quitar:hover {
+    color: var(--error);
+}
+
+.instancia .error {
     display: none;
     color: var(--error);
     font-size: 0.85rem;
@@ -88,13 +151,13 @@ section.modelo .error {
     white-space: pre-wrap;
 }
 
-section.modelo .error:not(:empty) {
+.instancia .error:not(:empty) {
     display: block;
 }
 
-section.modelo .campos {
+.instancia .campos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.6rem;
 }
 
@@ -124,12 +187,13 @@ section.modelo .campos {
     color: var(--texto);
 }
 
-section.modelo .resumen {
+.instancia .resumen {
     margin: 0.75rem 0 0;
     padding: 0.6rem;
     font-size: 0.72rem;
     line-height: 1.5;
-    background: var(--fondo);
+    background: #fff;
+    border: 1px solid var(--borde);
     border-radius: 4px;
     overflow-x: auto;
 }
